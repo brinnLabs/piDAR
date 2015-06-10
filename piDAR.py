@@ -23,7 +23,7 @@ GPIO.setmode(GPIO.BCM)
 
 #==============================================================================
 # heres all the XML settings lets break them out into parts
-
+print "Parsing XML"
 tree = ET.parse('/boot/settings.xml')
 root = tree.getroot()
 mixer = root.find('mixer')
@@ -51,33 +51,42 @@ controls = {}
 
 #==============================================================================
 # take the settings and make it usable 
-
+print "Parsing Input Pins"
 for pins in input.findall('pin'):
 	#this is ugly but it gives us a list of tuples of the pin and its state
 	input_pins.append((int(pins.text), pins.attrib.values()[0]))
+	print "\t{}, {}".format(int(pins.text), pins.attrib.values()[0])
 
+print "Parsing Output Pins"	
 for pins in output.findall('pin'):
 	#this is ugly but it gives us a list of tuples of the pin and its state
 	output_pins.append((int(pins.text), pins.attrib.values()[0]))
+	print "\t{}, {}".format(int(pins.text), pins.attrib.values()[0])
 
 #is the audio interruptible   
 audio_interruptible = audio.attrib.values()[0].upper() == 'TRUE'
 
+print "Parsing Songs"
 for songs in audio.findall('song'):
 	#trigger pin and the song associated with
 	audio_songs[int(songs.attrib.values()[0])] = songs.text
+	print "\t{}, trigger {}".format(songs.text, songs.attrib.values()[0])
 
+print "Parsing Playlist"
 for songs in audio.findall('playlist'):
 	#trigger pin and the songs associated with it
 	#the data type is a dictionary that holds an array of song names
 	playlist = []
 	for songNames in songs.findall('name'):
 		playlist.append(songNames.text)
+		print "\t{}, trigger {}".format(songNames.text, songs.attrib.values()[0])
 	audio_playlist[int(songs.attrib.values()[0])] = playlist
-	
+
+print "Parsing Output Pin Control"	
 for outputs in control.findall('Output'):
 	#a dictionary that holds a tuple/pair 
 	controls[int(outputs.attrib.values()[0])] = (int(outputs.find('pin').text),(int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0))
+	print "\tOutput {}, duration {}, trigger {}".format(int(outputs.find('pin').text), (int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0), int(outputs.attrib.values()[0]))
 	
 #==============================================================================
 # setup the mixer
@@ -85,6 +94,7 @@ for outputs in control.findall('Output'):
 # set bit depth to audio bit depth
 # channels are probably stereo 
 # the buffer size, 1024 should be large enough
+print "Setting up mixer"
 
 frequency = int(mixer.find('frequency').text)
 bit_depth = int(mixer.find('bit_depth').text) * (-1 if mixer.find('signed').text.upper() == 'TRUE' else 1)
@@ -97,6 +107,7 @@ pygame.mixer.init(frequency, bit_depth, channels, buffer)
 # we need to handle the threaded callbacks here   
 
 def input_callback(channel):
+	print "\t{}, {}".format("Pin triggered", channel)
 	#check if we can start a new audio stream
 	if(audio_interruptible or not pygame.mixer.music.get_busy()):
 		#are we looking at an audio pin
@@ -118,7 +129,7 @@ def input_callback(channel):
 			playlist_playing = True
 			playlist_num = channel
 			#load audio and play it
-			pygame.mixer.music.load(audio_songs[channel][0])
+			pygame.mixer.music.load(audio_playlist[channel][0])
 			pygame.mixer.music.play()
 			if(channel in controls):
 				#get the current state of the pin and invert it
@@ -142,6 +153,7 @@ def reset_pin(channel, state):
 
 #==============================================================================
 #setup pins here
+print "Setting up input pins"
 for pins in input_pins:
    if (pins[1].upper() == 'PULLUP'):
 		GPIO.setup(pins[0], GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -151,6 +163,7 @@ for pins in input_pins:
 		GPIO.setup(pins[0], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 		GPIO.add_event_detect(pins[0], GPIO.RISING, callback=input_callback, bouncetime=200) 
 
+print "Setting up output pins"
 for pins in output_pins:
 	if (pins[1].upper() == 'HIGH'):
 		GPIO.setup(pins[0], GPIO.OUT, initial=GPIO.HIGH)
@@ -160,7 +173,7 @@ for pins in output_pins:
 			
 #==============================================================================
 #our infinite loop to run everything
-
+print "Starting infinite loop"
 while True:
 	try:   
 		#button presses are threaded so not handled in main loop
