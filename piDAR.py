@@ -16,6 +16,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 import time
 from threading import Timer
+import os
 
 #==============================================================================
 # our board numbering, we should use BCM to preserve things across hardware
@@ -24,7 +25,7 @@ GPIO.setmode(GPIO.BCM)
 #==============================================================================
 # heres all the XML settings lets break them out into parts
 print "Parsing XML"
-tree = ET.parse('/boot/settings.xml')
+tree = ET.parse('/boot/Audio/settings.xml')
 root = tree.getroot()
 mixer = root.find('mixer')
 setup = root.find('setup_IO_pins')
@@ -174,6 +175,10 @@ for pins in output_pins:
 #==============================================================================
 #our infinite loop to run everything
 print "Starting infinite loop"
+#we have to change the working directory or 
+#it defaults to wherever called the script
+os.chdir("/boot/audio")
+print "{}: {}".format("Current Directory", os.getcwd())
 while True:
 	try:   
 		#button presses are threaded so not handled in main loop
