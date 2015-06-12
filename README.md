@@ -13,13 +13,13 @@ Currently it supports only 1 stream, in the future multiple simultaneous streams
 
 ## Installation
 
-to get this to run at boot put piDAR.py in the boot folder and edit rc.local which is found in /etc/ by doing
+to get this to run at boot create a folder named audio on the boot partition and put piDAR.py and settings.xml in the boot folder. Then edit rc.local which is found in /etc/ by doing
 
     sudo nano /etc/rc.local
 	
 and then replace the IP dummy script with
 
-   sudo python /boot/piDAR.py
+    sudo python /boot/audio/piDAR.py
 
 Make sure to edit the settings file to the layout you would like
    
