@@ -44,7 +44,7 @@ output_pins = []
 audio_songs = {}
 #trickier since we need to know when the song is done playing
 audio_playlist = {}
-playlist_playing = False
+playlist_playing = 0
 playlist_pos = 0
 playlist_num = 0
 
@@ -88,7 +88,7 @@ for outputs in control.findall('Output'):
 	#a dictionary that holds a tuple/pair 
 	controls[int(outputs.attrib.values()[0])] = (int(outputs.find('pin').text),(int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0))
 	print "\tOutput {}, duration {}, trigger {}".format(int(outputs.find('pin').text), (int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0), int(outputs.attrib.values()[0]))
-	
+
 #==============================================================================
 # setup the mixer
 # set sample rate to highest sample rate
@@ -108,47 +108,51 @@ pygame.mixer.init(frequency, bit_depth, channels, buffer)
 # we need to handle the threaded callbacks here   
 
 def input_callback(channel):
-	print "\t{}, {}".format("Pin triggered", channel)
+	global playlist_playing
+	global playlist_pos
+	global playlist_num
+	print "{}, {}".format("Pin triggered", channel)
 	#check if we can start a new audio stream
 	if(audio_interruptible or not pygame.mixer.music.get_busy()):
 		#are we looking at an audio pin
 		if(channel in audio_songs):
-			playlist_playing = False
+			print "starting audio playback"
+			playlist_playing = 0
 			#load audio and play it
 			pygame.mixer.music.load(audio_songs[channel])
 			pygame.mixer.music.play()
 			if(channel in controls):
 				#get the current state of the pin and invert it
-				state = GPIO.input(channel)
-				GPIO.output(channel, Not(state))
+				state = GPIO.input(controls[channel][0])
+				GPIO.output(controls[channel][0], not(state))
 				if(controls[channel][1] > 0):
 					#check if the pin isn't a toggle
-					Timer(controls[channel][1]/1000.0, reset_pin, [channel, state]).start()
+					Timer(controls[channel][1]/1000.0, reset_pin, [controls[channel][0], state]).start()
 		#is it a playlist pin
 		if(channel in audio_playlist):
+			print "starting playlist playback"
 			playlist_pos = 0
-			playlist_playing = True
+			playlist_playing = 1
 			playlist_num = channel
 			#load audio and play it
 			pygame.mixer.music.load(audio_playlist[channel][0])
 			pygame.mixer.music.play()
 			if(channel in controls):
 				#get the current state of the pin and invert it
-				state = GPIO.input(channel)
-				GPIO.output(channel, Not(state))
+				state = GPIO.input(controls[channel][0])
+				GPIO.output(controls[channel][0], not(state))
 				if(controls[channel][1] > 0):
 					#check if the pin isn't a toggle
-					Timer(controls[channel][1]/1000.0, reset_pin, [channel, state]).start()
+					Timer(controls[channel][1]/1000.0, reset_pin, [controls[channel][0], state]).start()
 	#check if its just an output pin
 	elif(channel in controls):
 		#get the current state of the pin and invert it
-		state = GPIO.input(channel)
-		GPIO.output(channel, Not(state))
+		state = GPIO.input(controls[channel][0])
+		GPIO.output(controls[channel][0], not(state))
 		if(controls[channel][1] > 0):
 			#check if the pin isn't a toggle
-			Timer(controls[channel][1]/1000.0, reset_pin, [channel, state]).start()
-
-
+			Timer(controls[channel][1]/1000.0, reset_pin, [controls[channel][0], state]).start()
+			
 def reset_pin(channel, state):
 	GPIO.output(channel, state)
 
@@ -179,15 +183,21 @@ print "Starting infinite loop"
 #it defaults to wherever called the script
 os.chdir("/boot/audio")
 print "{}: {}".format("Current Directory", os.getcwd())
+
 while True:
 	try:   
 		#button presses are threaded so not handled in main loop
 		#we have to handle playlist switching here
-		if(playlist_playing and not pygame.mixer.music.get_busy()):
+		if(playlist_playing and not(pygame.mixer.music.get_busy())):
+			print "Reached end of song, switching tracks"
 			#music is done playing move to the next song if it exists
-			if(playlist_pos < len(audio_playlist[playlist_num])):
-				pygame.mixer.music.load(audio_songs[channel][playlist_pos+1])
-				playlist_pos += 1
+			if(playlist_pos+1 < len(audio_playlist[playlist_num])):
+				playlist_pos+=1
+				pygame.mixer.music.load(audio_playlist[playlist_num][playlist_pos])
+				pygame.mixer.music.play()
+			else:
+				print "Reached end of playlist"
+				playlist_playing = 0
 		sleep(.01)
 	except KeyboardInterrupt:
 		GPIO.cleanup()
