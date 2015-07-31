@@ -44,6 +44,7 @@ output_pins = []
 #these need to be searchable so we make them dictionaries 
 audio_songs = {}
 is_looping = {}
+stop_pin = {}
 #trickier since we need to know when the song is done playing
 audio_playlist = {}
 
@@ -75,6 +76,10 @@ for songs in audio.findall('song'):
 	#trigger pin and the song associated with
 	audio_songs[int(songs.attrib.values()[0])] = songs.text
 	is_looping[int(songs.attrib.values()[0])] = songs.attrib.values()[1].upper() == 'TRUE'
+	#if it doesn't loop we don't need a stop pin
+	#make sure to declare the pin in the settings.xml file
+	if (songs.attrib.values()[1].upper() == 'TRUE'):
+		stop_pin[int(songs.attrib.values()[0])] = int(songs.attrib.values()[2])
 	print "\t{}, trigger {}, is looping {}".format(songs.text, songs.attrib.values()[0], songs.attrib.values()[1])
 
 print "Parsing Playlist"
@@ -117,6 +122,15 @@ def input_callback(channel):
 	global playlist_num
 	global song_num
 	print "{}, {}".format("Pin triggered", channel)
+	#this assumes stopping a loop means stopping immediately 
+	#but we only want to stop it if it is looping 
+	#also check if the song has a stop pin 
+	#and that the pin triggered is the stop pin
+	if(is_looping.has_key(song_num) and is_looping[song_num] and stop_pin.has_key(song_num) and stop_pin[song_num] == channel):
+		#since the song_num is how we check for looping if we set it to
+		#a variable that will never be valid it wont reloop when we stop 
+		song_num = -1
+		pygame.mixer.music.stop()
 	#check if we can start a new audio stream
 	if(audio_interruptible or not pygame.mixer.music.get_busy()):
 		#are we looking at an audio pin
@@ -192,6 +206,8 @@ print "{}: {}".format("Current Directory", os.getcwd())
 while True:
 	try:   
 		#button presses are threaded so not handled in main loop
+		#because we dont know that there are any audio pins declared 
+		#we have to check if the key exists in the dictionary, fast fail style
 		if(is_looping.has_key(song_num) and is_looping[song_num] and not(pygame.mixer.music.get_busy())):
 			print "looping again"
 			pygame.mixer.music.play()

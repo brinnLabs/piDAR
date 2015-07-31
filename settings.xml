@@ -18,6 +18,8 @@
     <input>
       <pin type="PULLUP">2</pin>
       <pin type="PULLDOWN">3</pin>
+	  <!--We have to declare stop pins for the loops here-->
+	  <pin type="PULLUP">5</pin>
     </input>
     <output>
       <!--The state of the output pin is whether it is high or low by default-->
@@ -27,7 +29,7 @@
   </setup_IO_pins>
   <Audio interruptible="true">
     <!--Acceptable audio formats are mp3, ogg, and wav-->
-    <song pin="2" loop="true">1.mp3</song>
+    <song pin="2" loop="true" stop_pin="5">1.mp3</song>
     <playlist pin="3">
       <name>1.mp3</name>
       <name>2.wav</name>
