@@ -40,14 +40,17 @@ control = root.find('Control')
 input_pins = [] #we dont have to search these so lists are good
 output_pins = []
 
+
 #these need to be searchable so we make them dictionaries 
 audio_songs = {}
+is_looping = {}
 #trickier since we need to know when the song is done playing
 audio_playlist = {}
+
 playlist_playing = 0
 playlist_pos = 0
 playlist_num = 0
-
+song_num = 0
 controls = {}
 
 #==============================================================================
@@ -71,7 +74,8 @@ print "Parsing Songs"
 for songs in audio.findall('song'):
 	#trigger pin and the song associated with
 	audio_songs[int(songs.attrib.values()[0])] = songs.text
-	print "\t{}, trigger {}".format(songs.text, songs.attrib.values()[0])
+	is_looping[int(songs.attrib.values()[0])] = songs.attrib.values()[1].upper() == 'TRUE'
+	print "\t{}, trigger {}, is looping {}".format(songs.text, songs.attrib.values()[0], songs.attrib.values()[1])
 
 print "Parsing Playlist"
 for songs in audio.findall('playlist'):
@@ -111,6 +115,7 @@ def input_callback(channel):
 	global playlist_playing
 	global playlist_pos
 	global playlist_num
+	global song_num
 	print "{}, {}".format("Pin triggered", channel)
 	#check if we can start a new audio stream
 	if(audio_interruptible or not pygame.mixer.music.get_busy()):
@@ -118,6 +123,7 @@ def input_callback(channel):
 		if(channel in audio_songs):
 			print "starting audio playback"
 			playlist_playing = 0
+			song_num = channel
 			#load audio and play it
 			pygame.mixer.music.load(audio_songs[channel])
 			pygame.mixer.music.play()
@@ -183,10 +189,12 @@ print "Starting infinite loop"
 #it defaults to wherever called the script
 os.chdir("/boot/audio")
 print "{}: {}".format("Current Directory", os.getcwd())
-
 while True:
 	try:   
 		#button presses are threaded so not handled in main loop
+		if(is_looping.has_key(song_num) and is_looping[song_num] and not(pygame.mixer.music.get_busy())):
+			print "looping again"
+			pygame.mixer.music.play()
 		#we have to handle playlist switching here
 		if(playlist_playing and not(pygame.mixer.music.get_busy())):
 			print "Reached end of song, switching tracks"
