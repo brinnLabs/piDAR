@@ -59,28 +59,28 @@ controls = {}
 print "Parsing Input Pins"
 for pins in input.findall('pin'):
 	#this is ugly but it gives us a list of tuples of the pin and its state
-	input_pins.append((int(pins.text), pins.attrib.values()[0]))
-	print "\t{}, {}".format(int(pins.text), pins.attrib.values()[0])
+	input_pins.append((int(pins.text), pins.get('type')))
+	print "\t{}, {}".format(int(pins.text), pins.get('type'))
 
 print "Parsing Output Pins"	
 for pins in output.findall('pin'):
 	#this is ugly but it gives us a list of tuples of the pin and its state
-	output_pins.append((int(pins.text), pins.attrib.values()[0]))
-	print "\t{}, {}".format(int(pins.text), pins.attrib.values()[0])
+	output_pins.append((int(pins.text), pins.get('state')))
+	print "\t{}, {}".format(int(pins.text), pins.get('state'))
 
 #is the audio interruptible   
-audio_interruptible = audio.attrib.values()[0].upper() == 'TRUE'
+audio_interruptible = audio.get('interruptible', 'false').upper() == 'TRUE'
 
 print "Parsing Songs"
 for songs in audio.findall('song'):
 	#trigger pin and the song associated with
-	audio_songs[int(songs.attrib.values()[0])] = songs.text
-	is_looping[int(songs.attrib.values()[0])] = songs.attrib.values()[1].upper() == 'TRUE'
+	audio_songs[int(songs.get('pin'))] = songs.text
+	is_looping[int(songs.get('pin'))] = songs.get('loop').upper() == 'TRUE'
 	#if it doesn't loop we don't need a stop pin
 	#make sure to declare the pin in the settings.xml file
-	if (songs.attrib.values()[1].upper() == 'TRUE'):
-		stop_pin[int(songs.attrib.values()[0])] = int(songs.attrib.values()[2])
-	print "\t{}, trigger {}, is looping {}".format(songs.text, songs.attrib.values()[0], songs.attrib.values()[1])
+	if (songs.get('loop').upper() == 'TRUE'):
+		stop_pin[int(songs.get('pin'))] = int(songs.get('stop_pin'))
+	print "\t{}, trigger {}, is looping {}, stop pin {}".format(songs.text, int(songs.get('pin')), songs.get('loop').upper() == 'TRUE', songs.get('stop_pin', 'None'))
 
 print "Parsing Playlist"
 for songs in audio.findall('playlist'):
@@ -89,14 +89,14 @@ for songs in audio.findall('playlist'):
 	playlist = []
 	for songNames in songs.findall('name'):
 		playlist.append(songNames.text)
-		print "\t{}, trigger {}".format(songNames.text, songs.attrib.values()[0])
-	audio_playlist[int(songs.attrib.values()[0])] = playlist
+		print "\t{}, trigger {}".format(songNames.text, songs.get('pin'))
+	audio_playlist[int(songs.get('pin'))] = playlist
 
 print "Parsing Output Pin Control"	
 for outputs in control.findall('Output'):
 	#a dictionary that holds a tuple/pair 
-	controls[int(outputs.attrib.values()[0])] = (int(outputs.find('pin').text),(int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0))
-	print "\tOutput {}, duration {}, trigger {}".format(int(outputs.find('pin').text), (int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0), int(outputs.attrib.values()[0]))
+	controls[int(outputs.get('trigger'))] = (int(outputs.find('pin').text),(int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0))
+	print "\tOutput {}, duration {}, trigger {}".format(int(outputs.find('pin').text), (int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0), int(outputs.get('trigger')))
 
 #==============================================================================
 # setup the mixer
@@ -203,6 +203,7 @@ print "Starting infinite loop"
 #it defaults to wherever called the script
 os.chdir("/boot/audio")
 print "{}: {}".format("Current Directory", os.getcwd())
+
 while True:
 	try:   
 		#button presses are threaded so not handled in main loop
