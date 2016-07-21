@@ -3,13 +3,13 @@ python:
   - "2.7"
   
 install:
-  
-  - pip install RPi.GPIO
-
+  #normal libraries
+  - pip install RPi.GPIO numpy
+  #pygames pip install is broken http://stackoverflow.com/questions/17869101/unable-to-install-pygame-using-pip
   - sudo apt-get build-dep python-pygame
   - sudo apt-get install mercurial
   - pip install hg+http://bitbucket.org/pygame/pygame
   
 # command to run tests
 script: 
-  piDAR
+  - python piDAR.py
