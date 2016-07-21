@@ -157,7 +157,7 @@ def input_callback(channel):
 		#is it a playlist pin
 		if(channel in audio_playlist):
 			print "starting playlist playback"
-			if(playlist_random[channel] == True)
+			if(playlist_random[channel] == True):
 				playlist_pos = random.randint(0, len(audio_playlist[channel])-1)
 				playlist_playing = 1
 				playlist_num = channel
@@ -171,7 +171,7 @@ def input_callback(channel):
 					if(controls[channel][1] > 0):
 						#check if the pin isn't a toggle
 						Timer(controls[channel][1]/1000.0, reset_pin, [controls[channel][0], state]).start()
-			else
+			else:
 				playlist_pos = 0
 				playlist_playing = 1
 				playlist_num = channel
@@ -237,7 +237,7 @@ while True:
 		if(playlist_playing and not(pygame.mixer.music.get_busy())):
 			print "Reached end of song, switching tracks"
 			#music is done playing move to the next song if it exists
-			if(playlist_random[playlist_num] == True)
+			if(playlist_random[playlist_num] == True):
 #				if(playlist_pos+1 < len(audio_playlist[playlist_num])):
 #					playlist_pos+=1
 #					pygame.mixer.music.load(audio_playlist[playlist_num][playlist_pos])
@@ -250,7 +250,7 @@ while True:
 				print "Finished Playing a Random Song"
 				playlist_playing = 0
 
-			else
+			else:
 				if(playlist_pos+1 < len(audio_playlist[playlist_num])):
 					playlist_pos+=1
 					pygame.mixer.music.load(audio_playlist[playlist_num][playlist_pos])
