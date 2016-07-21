@@ -157,7 +157,7 @@ def input_callback(channel):
 		#is it a playlist pin
 		if(channel in audio_playlist):
 			print "starting playlist playback"
-			if(playlist_random[channel] == TRUE)
+			if(playlist_random[channel] == True)
 				playlist_pos = random.randint(0, len(audio_playlist[channel])-1)
 				playlist_playing = 1
 				playlist_num = channel
@@ -237,7 +237,7 @@ while True:
 		if(playlist_playing and not(pygame.mixer.music.get_busy())):
 			print "Reached end of song, switching tracks"
 			#music is done playing move to the next song if it exists
-			if(playlist_random[playlist_num] == TRUE)
+			if(playlist_random[playlist_num] == True)
 #				if(playlist_pos+1 < len(audio_playlist[playlist_num])):
 #					playlist_pos+=1
 #					pygame.mixer.music.load(audio_playlist[playlist_num][playlist_pos])
