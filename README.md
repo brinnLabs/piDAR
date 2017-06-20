@@ -11,7 +11,15 @@ This script uses pygame for streaming audio and according to their documentation
 
 Currently it supports only 1 stream, in the future multiple simultaneous streams will also be an option but I had problems trying to buffer that many songs and streaming 1 at a time was much more manageable.
 
-## Installation
+## Script Installation
+
+boot the Pi and run the install script (install.sh) make sure the patch file (rc.local.patch) is at the same level as the install script
+
+make sure to place piDAR.py in the boot folder and a settings XML file to read from
+
+You have to make your own settings file though there is Gooey-Pi for a easy visual setup.
+
+## Manual Installation
 
 to get this to run at boot create a folder named audio on the boot partition and put piDAR.py and settings.xml in the boot folder. Then edit rc.local which is found in /etc/ by doing
 
@@ -19,13 +27,11 @@ to get this to run at boot create a folder named audio on the boot partition and
 	
 and then replace the IP dummy script with
 
-    sudo python /boot/audio/piDAR.py
+    sudo python /boot/piDAR.py
 
 Make sure to edit the settings file to the layout you would like
    
    
 ## To Do:
-+ add easy install script
 + multiple streams
-+ settings GUI
 + more customizable output control
