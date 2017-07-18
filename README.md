@@ -13,9 +13,9 @@ Currently it supports only 1 stream, in the future multiple simultaneous streams
 
 ## Script Installation
 
-boot the Pi and run the install script (install.sh) make sure the patch file (rc.local.patch) is at the same level as the install script
+Boot the Pi and run the install script (install.sh) make sure the patch file (rc.local.patch) is at the same level as the install script
 
-make sure to place piDAR.py in the boot folder and a settings XML file to read from
+Make sure to place piDAR.py in the boot folder and a settings XML file to read from
 
 You have to make your own settings file though there is Gooey-Pi for a easy visual setup.
 
