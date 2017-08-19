@@ -101,8 +101,8 @@ for playlist in audio.findall('playlist'):
 print "Parsing Output Pin Control"	
 for outputs in control.findall('Output'):
 	#a dictionary that holds a tuple/pair 
-	controls[int(outputs.get('trigger'))] = (int(outputs.find('pin').text),(int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0))
-	print "\tOutput {}, duration {}, trigger {}".format(int(outputs.find('pin').text), (int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0), int(outputs.get('trigger')))
+	controls[int(outputs.get('trigger'))] = (int(outputs.find('pin').text),(int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0), outputs.find('state').text == 'HIGH')
+	print "\tOutput {}, duration {}, trigger {}, initial state {}".format(int(outputs.find('pin').text), (int(outputs.find('duration').text) if int(outputs.find('duration').text) > 0 else 0), int(outputs.get('trigger')), outputs.find('state').text == 'HIGH')
 
 #==============================================================================
 # setup the mixer
@@ -189,10 +189,12 @@ def input_callback(channel):
 	elif(channel in controls):
 		#get the current state of the pin and invert it
 		state = GPIO.input(controls[channel][0])
-		GPIO.output(controls[channel][0], not(state))
-		if(controls[channel][1] > 0):
-			#check if the pin isn't a toggle
-			Timer(controls[channel][1]/1000.0, reset_pin, [controls[channel][0], state]).start()
+		#if the state is right to be switched or is a toggle
+		if(state == controls[channel][2] or controls[channel][1] == 0):
+			GPIO.output(controls[channel][0], not(state))
+			if(controls[channel][1] > 0):
+				#check if the pin isn't a toggle and reset it
+				Timer(controls[channel][1]/1000.0, reset_pin, [controls[channel][0], state]).start()
 			
 def reset_pin(channel, state):
 	GPIO.output(channel, state)
